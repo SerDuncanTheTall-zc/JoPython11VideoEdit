@@ -1,9 +1,11 @@
 import os
+# 必须在导入 moviepy 之前设置环境变量
 os.environ["IMAGEMAGICK_BINARY"] = r"D:\CondaPy11Video\ImageMagick-7.1.2-Q16-HDRI\magick.exe"
 
 from moviepy import VideoFileClip, TextClip, CompositeVideoClip, concatenate_videoclips, ImageClip
 from proglog import ProgressBarLogger
 
+# --- 拦截 MoviePy 进度的自定义 Logger ---
 class UIProgressLogger(ProgressBarLogger):
     def __init__(self, ui_progress_cb):
         super().__init__()
@@ -19,13 +21,20 @@ class UIProgressLogger(ProgressBarLogger):
 
 class VideoRenderer:
     @staticmethod
+    def get_video_info(input_path):
+        """获取视频元数据（时长等）"""
+        clip = VideoFileClip(input_path)
+        info = {
+            "duration": clip.duration,
+            "fps": clip.fps,
+            "size": clip.size
+        }
+        clip.close()
+        return info
+
+    @staticmethod
     def _calculate_abs_pos(bg_size, txt_size, pct_pos):
-        """
-        计算绝对坐标：保证文字的【中心点】对齐到用户指定的百分比位置
-        bg_size: 视频画面宽高 (w, h)
-        txt_size: 文字图层宽高 (w, h)
-        pct_pos: 百分比元组 (x%, y%)
-        """
+        """百分比坐标换算为绝对像素坐标"""
         x_pct, y_pct = pct_pos
         x = (bg_size[0] * x_pct / 100) - (txt_size[0] / 2)
         y = (bg_size[1] * y_pct / 100) - (txt_size[1] / 2)
@@ -34,7 +43,8 @@ class VideoRenderer:
     @staticmethod
     def generate_preview(input_path, t, text, size, color, pos, output_img="temp_preview.png"):
         clip = VideoFileClip(input_path)
-        if t > clip.duration: t = clip.duration - 0.1
+        if t > clip.duration: 
+            t = clip.duration - 0.1
             
         frame = clip.get_frame(t)
         freeze = ImageClip(frame)
@@ -45,7 +55,6 @@ class VideoRenderer:
                 font=r"C:\Windows\Fonts\simhei.ttf",
                 stroke_color='black', stroke_width=2, method='label'
             )
-            # 计算绝对坐标并应用
             abs_pos = VideoRenderer._calculate_abs_pos(freeze.size, txt.size, pos)
             txt = txt.with_position(abs_pos).with_duration(1)
             
@@ -75,7 +84,6 @@ class VideoRenderer:
                 stroke_color='black', stroke_width=2, method='label'
             )
             
-            # 使用换算后的绝对坐标
             abs_pos = VideoRenderer._calculate_abs_pos(freeze.size, txt.size, mark['pos'])
             txt = txt.with_position(abs_pos).with_duration(mark['dur'])
             
@@ -86,10 +94,9 @@ class VideoRenderer:
             segments.append(clip.subclipped(last_t))
             
         final_video = concatenate_videoclips(segments)
-        
         my_logger = UIProgressLogger(progress_callback) if progress_callback else 'bar'
         
-        # === 核心逻辑：GPU/CPU 智能降级 ===
+        # GPU/CPU 智能降级
         success = False
         if use_gpu:
             try:
@@ -99,12 +106,10 @@ class VideoRenderer:
                 )
                 success = True
             except Exception as e:
-                print(f"GPU 编码失败，即将自动降级为 CPU 编码... 错误信息: {e}")
-                # 出现异常，重置状态交由下方 CPU 代码接管
+                print(f"GPU 加速失败，自动降级为 CPU 渲染... 错误信息: {e}")
                 success = False 
 
         if not success:
-            # CPU 兜底渲染方案
             final_video.write_videofile(
                 output_path, codec='libx264', audio_codec='aac', 
                 fps=clip.fps, threads=8, logger=my_logger
