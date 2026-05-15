@@ -28,7 +28,7 @@ pip install -r requirements.txt
 MoviePy 在进行部分复杂图层合成时依赖 ImageMagick。
 
 前往 ImageMagick 官网下载 Windows 便携版或安装版 (推荐 7.1.2-Q16-HDRI)。
-
+https://github.com/ImageMagick/ImageMagick/releases/download/7.1.2-22/ImageMagick-7.1.2-22-Q16-HDRI-x64-dll.exe
 打开项目中的 video_engine.py。
 
 将第二行的路径修改为你本地实际的 magick.exe 绝对路径：
