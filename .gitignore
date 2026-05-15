@@ -1,0 +1,18 @@
+# 忽略 Python 字节码缓存
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 忽略视频文件 (mp4, avi, mov 等)
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.flv
+
+# 忽略之前备份的副本
+* - 副本.mp4
+
+# 忽略日志和临时文件
+*.log
+resultTEMP_MPY_wvf_snd.mp4

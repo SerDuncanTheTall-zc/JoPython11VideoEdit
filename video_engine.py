@@ -49,7 +49,7 @@ class VideoRenderer:
             codec='h264_nvenc', 
             audio_codec='aac', 
             fps=clip.fps,
-            n_processes=8
+            threads=8
         )
         
         clip.close()
