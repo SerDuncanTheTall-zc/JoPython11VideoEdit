@@ -1,0 +1,11 @@
+# 核心依赖库
+moviepy>=2.2.1
+PyQt6>=6.11.0
+proglog
+
+# 网络请求库 (预留给后续 API 扩展)
+requests
+
+# 图像处理底层依赖 (MoviePy 2.x 会自动调用)
+pillow
+numpy
